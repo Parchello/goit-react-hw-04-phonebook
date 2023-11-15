@@ -1,87 +1,69 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { PhoneBook } from './PhoneBook/PhoneBook';
 import { Contacts } from './Contacts/Contacts';
 import { Filter } from './Filter/Filter';
+import toast, { Toaster } from 'react-hot-toast';
 
-export class App extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+const initialContacts = [
+  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+];
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      window.localStorage.setItem(
-        'contacts',
-        JSON.stringify(this.state.contacts)
-      );
-    }
-  }
-  componentDidMount() {
+export const App = () => {
+  const [contacts, setContacts] = useState(() => {
     const savedContacts = window.localStorage.getItem('contacts');
-    if (savedContacts !== null) {
-      this.setState({ contacts: JSON.parse(savedContacts) });
-    }
-  }
-  addContact = newContact => {
-    const { contacts } = this.state;
+    return savedContacts ? JSON.parse(savedContacts) : initialContacts;
+  });
+  const [filter, setfilter] = useState('');
+
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  const addContact = newContact => {
     const existedContact = contacts.some(
       contact => contact.name === newContact.name
     );
     if (existedContact) {
-      alert(`${newContact.name} is already in contact list`);
+      toast.error(`${newContact.name} is already in contact list`);
     } else {
       const idContact = {
         id: nanoid(),
         ...newContact,
       };
-      this.setState(prevState => ({
-        contacts: [...prevState.contacts, idContact],
-      }));
-      console.log(idContact);
+      setContacts(prevContacts => [...prevContacts, idContact]);
+      toast.success('New contact added');
     }
   };
 
-  deleteContact = contactId => {
-    this.setState(prevState => {
-      return {
-        contacts: prevState.contacts.filter(item => item.id !== contactId),
-      };
+  const deleteContact = contactId => {
+    setContacts(prevContacts => {
+      return prevContacts.filter(item => item.id !== contactId);
     });
-    console.log(contactId);
+    toast.success(
+      'Why, just why You deleted this contact? anyway its not here now =)'
+    );
   };
 
-  updateContactFilter = newFilter => {
-    console.log(newFilter);
-    this.setState({ filter: newFilter });
+  const updateContactFilter = newFilter => {
+    setfilter(newFilter);
   };
 
-  render() {
-    const { contacts, filter } = this.state;
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
-    const filteredContacts = contacts.filter(contact =>
-      contact.name.toLowerCase().includes(filter.toLowerCase())
-    );
-    return (
-      <div>
-        <h1>Phone Book</h1>
-        <PhoneBook onAdd={this.addContact} />
-        <h2>Contacts</h2>
-        <Filter
-          filter={this.state.filter}
-          updateContact={this.updateContactFilter}
-        />
-        <Contacts
-          contactList={filteredContacts}
-          onDelete={this.deleteContact}
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <h1>Phone Book</h1>
+      <PhoneBook onAdd={addContact} />
+      <h2>Contacts</h2>
+      <Filter filter={filter} updateContact={updateContactFilter} />
+      <Contacts contactList={filteredContacts} onDelete={deleteContact} />
+      <Toaster />
+    </div>
+  );
+};
