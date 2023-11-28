@@ -29,12 +29,7 @@ export const PhoneBook = ({ onAdd }) => {
           <Error name="name" component="span" />
 
           <LabelName>Number</LabelName>
-          <Field
-            id="number"
-            name="number"
-            type="number"
-            placeholder="Phone number"
-          />
+          <Field id="number" name="number" placeholder="Phone number" />
           <Error name="number" component="span" />
 
           <Button type="submit">Add contact</Button>
